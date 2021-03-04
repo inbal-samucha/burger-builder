@@ -28,8 +28,9 @@ cursor: not-allowed;
 }
 
 .Label {
-    position: relative;
-    left: 65px;
+position: relative;
+right: 60px;
+top:35px;
 padding: 5px;
 font-weight: bold;
 width: 80px;
