@@ -4,6 +4,8 @@ import Burger from '../../components/Burger/Burger';
 import BuildControls from '../../components/Burger/BuildControls/BuildControls';
 import Modal from '../../components/UI/Modal';
 import OrderSummary from '../../components/Burger/OrderSummary';
+import axios from '../../axios-orders';
+import Spinner from '../../components/UI/Spinner';
 
 const INGREDIENTS_PRICES = {
     salad: 0.5,
@@ -15,15 +17,18 @@ const INGREDIENTS_PRICES = {
 class BurgerBuilder extends Component {
 
     state = {
-        ingredients: {
-            salad: 0,
-            bacon: 0,
-            cheese: 0,
-            meat: 0
-        },
+        ingredients: null,
         totalPrice: 3, //base price
         purchasable: false,
-        orderWasClicked: false
+        orderWasClicked: false,
+        loading: false
+    }
+
+    componentDidMount() {
+        axios.get('https://react-my-burger-bd365-default-rtdb.firebaseio.com/ingredients.json')
+            .then(res => {
+                this.setState({ ingredients: res.data })
+            });
     }
 
     updatePurchasState(ingredients) {
@@ -77,7 +82,28 @@ class BurgerBuilder extends Component {
     };
 
     purchaseContinueHandler = () => {
-        alert('You continue');
+        //alert('You continue');
+        this.setState({ loading: true });
+        const order = {
+            ingredients: this.state.ingredients,
+            price: this.state.totalPrice,
+            customer: {
+                name: 'Inbal',
+                adress: {
+                    street: 'projectStreet',
+                    number: '3',
+                    country: 'Israel'
+                },
+                email: 'pro@test.com'
+            }
+        }
+        axios.post('/orders.json', order)
+            .then(response => {
+                this.setState({ loading: false, orderWasClicked: false });
+            })
+            .catch(err => {
+                this.setState({ loading: false, orderWasClicked: false });
+            });
     };
 
     render() {
@@ -87,16 +113,12 @@ class BurgerBuilder extends Component {
         for (let key in disableInfo) {
             disableInfo[key] = disableInfo[key] <= 0; //{salad: true, meat: false, ...}
         }
-        return (
-            <Aux>
-                <Modal show={this.state.orderWasClicked} modalClosed={this.purchaseCancelHandler}>
-                    <OrderSummary
-                        ingredients={this.state.ingredients}
-                        purchaseCanceled={this.purchaseCancelHandler}
-                        purchaseContinue={this.purchaseContinueHandler}
-                        price={this.state.totalPrice} />
-                </Modal>
-                <Burger ingredients={this.state.ingredients} />
+        let orderSummary = null;
+        let burger = <Spinner />
+        if (this.state.ingredients) {
+            burger = (
+                <Aux>
+                    <Burger ingredients={this.state.ingredients} />
                     <BuildControls
                         ingredientAdded={this.addIngredientHandler}
                         ingredientRemove={this.removeIngredientHandler}
@@ -104,6 +126,23 @@ class BurgerBuilder extends Component {
                         price={this.state.totalPrice}
                         purchasable={this.state.purchasable}
                         ordered={this.orderWasClickedHandler} />
+                </Aux>);
+            orderSummary = (<OrderSummary
+                ingredients={this.state.ingredients}
+                purchaseCanceled={this.purchaseCancelHandler}
+                purchaseContinue={this.purchaseContinueHandler}
+                price={this.state.totalPrice} />);
+
+            if (this.state.loading) {
+                orderSummary = <Spinner />
+            }
+        }
+        return (
+            <Aux>
+                <Modal show={this.state.orderWasClicked} modalClosed={this.purchaseCancelHandler}>
+                    {orderSummary}
+                </Modal>
+                {burger}
             </Aux>
         );
     }
