@@ -28,7 +28,8 @@ class BurgerBuilder extends Component {
         axios.get('https://react-my-burger-bd365-default-rtdb.firebaseio.com/ingredients.json')
             .then(res => {
                 this.setState({ ingredients: res.data })
-            });
+            })
+            .catch(err => console.log(err));
     }
 
     updatePurchasState(ingredients) {
@@ -82,38 +83,98 @@ class BurgerBuilder extends Component {
     };
 
     purchaseContinueHandler = () => {
-        //alert('You continue');
-        this.setState({ loading: true });
-        const order = {
-            ingredients: this.state.ingredients,
-            price: this.state.totalPrice,
-            customer: {
-                name: 'Inbal',
-                adress: {
-                    street: 'projectStreet',
-                    number: '3',
-                    country: 'Israel'
-                },
-                email: 'pro@test.com'
-            }
+        // console.log('total price: ' + this.state.totalPrice);
+        // const queryParams = [];
+        // for(let i in this.state.ingredients){
+        //     queryParams.push(encodeURIComponent(i) + '=' + encodeURIComponent(this.state.ingredients[i]));
+        // }
+        // queryParams.push('price=' + this.state.totalPrice);
+        // const queryString = queryParams.join('&');
+        // this.props.history.push({
+        //     pathname: '/checkout',
+        //     search: '?' + queryString
+        // }); //Special methos provided by Router
+        // this.setState({ loading: true });
+        // const order = {
+        //     ingredients: this.state.ingredients,
+        //     price: this.state.totalPrice,
+        //     customer: {
+        //         name: 'Inbal',
+        //         address: {
+        //             street: 'Teststreet 1',
+        //             zipCode: '351',
+        //             country: 'Israel'
+        //         },
+        //         email: 'test@test.com'
+        //     },
+        // }
+        // axios.post('orders.json', order)
+        //     .then(res => {
+        //         this.setState({ loading: false, orderWasClicked: false });
+        //     })
+        //     .catch(err => {
+        //         this.setState({ loading: false, orderWasClicked: false })
+        //     });
+        const queryParams = [];
+        for (let i in this.state.ingredients){
+            queryParams.push(encodeURIComponent(i) + '=' +encodeURIComponent(this.state.ingredients[i]));
         }
-        axios.post('/orders.json', order)
-            .then(response => {
-                this.setState({ loading: false, orderWasClicked: false });
-            })
-            .catch(err => {
-                this.setState({ loading: false, orderWasClicked: false });
-            });
+        queryParams.push('price=' + this.state.totalPrice);
+        const queryString = queryParams.join('&');
+
+        this.props.history.push({
+            pathname: '/checkout',
+            search: '?' + queryString
+        });
     };
 
     render() {
-        const disableInfo = {
+        // const disableInfo = {
+        //     ...this.state.ingredients
+        // };
+        // for (let key in disableInfo) {
+        //     disableInfo[key] = disableInfo[key] <= 0; //{salad: true, meat: false, ...}
+        // }
+        // let orderSummary = null;
+        // let burger = <Spinner />
+        // if (this.state.ingredients) {
+        //     burger = (
+        //         <Aux>
+        //             <Burger ingredients={this.state.ingredients} />
+        //             <BuildControls
+        //                 ingredientAdded={this.addIngredientHandler}
+        //                 ingredientRemove={this.removeIngredientHandler}
+        //                 disabled={disableInfo}
+        //                 price={this.state.totalPrice}
+        //                 purchasable={this.state.purchasable}
+        //                 ordered={this.orderWasClickedHandler} />
+        //         </Aux>);
+        //     orderSummary = (<OrderSummary
+        //         ingredients={this.state.ingredients}
+        //         purchaseCanceled={this.purchaseCancelHandler}
+        //         purchaseContinue={this.purchaseContinueHandler}
+        //         price={this.state.totalPrice} />);
+
+        //     if (this.state.loading) {
+        //         orderSummary = <Spinner />
+        //     }
+        // }
+        // return (
+        //     <Aux>
+        //         <Modal show={this.state.orderWasClicked} modalClosed={this.purchaseCancelHandler}>
+        //             {orderSummary}
+        //         </Modal>
+        //         {burger}
+        //     </Aux>
+        // );
+        const disabledInfo = {
             ...this.state.ingredients
         };
-        for (let key in disableInfo) {
-            disableInfo[key] = disableInfo[key] <= 0; //{salad: true, meat: false, ...}
+        for (let key in disabledInfo) {
+            disabledInfo[key] = disabledInfo[key] <= 0
         }
         let orderSummary = null;
+
         let burger = <Spinner />
         if (this.state.ingredients) {
             burger = (
@@ -122,21 +183,21 @@ class BurgerBuilder extends Component {
                     <BuildControls
                         ingredientAdded={this.addIngredientHandler}
                         ingredientRemove={this.removeIngredientHandler}
-                        disabled={disableInfo}
+                        disabled={disabledInfo}
                         price={this.state.totalPrice}
                         purchasable={this.state.purchasable}
                         ordered={this.orderWasClickedHandler} />
                 </Aux>);
-            orderSummary = (<OrderSummary
+            orderSummary = <OrderSummary
                 ingredients={this.state.ingredients}
-                purchaseCanceled={this.purchaseCancelHandler}
-                purchaseContinue={this.purchaseContinueHandler}
-                price={this.state.totalPrice} />);
-
-            if (this.state.loading) {
-                orderSummary = <Spinner />
-            }
+                price={this.state.totalPrice}
+                purchaseCancelled={this.purchaseCancelHandler}
+                purchaseContinued={this.purchaseContinueHandler} />;
         }
+        if (this.state.loading) {
+            orderSummary = <Spinner />;
+        }
+
         return (
             <Aux>
                 <Modal show={this.state.orderWasClicked} modalClosed={this.purchaseCancelHandler}>
