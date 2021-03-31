@@ -4,25 +4,30 @@ import style from './Input.module.css';
 const input = (props) => {
 
     let inputElement = null;
+    const inputStyle = [style.InputElement];
+
+    if(props.invalid && props.shouldValidate && props.touched){ //shoultValidate will be true if the object in the orderForm (ContactData) has a validation propty
+        inputStyle.push(style.Invalid);
+    }
 
     switch (props.elementType) {
         case ('input'):
             inputElement = <input
-                className={style.InputElement}
+                className={inputStyle.join(' ')}
                 {...props.elementConfig}
                 value={props.value}
                 onChange={props.changed} />;
             break;
         case ('textarea'):
             inputElement = <textarea
-                className={style.InputElement}
+                className={inputStyle}
                 {...props.elementConfig}
                 value={props.value} 
                 onChange={props.changed}/>;
             break;
         default:
             inputElement = <input
-                className={style.InputElement}
+                className={inputStyle}
                 {...props.elementConfig}
                 value={props.value} 
                 onChange={props.changed}/>;
